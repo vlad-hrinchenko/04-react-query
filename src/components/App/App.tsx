@@ -6,7 +6,11 @@ import Loader from "../Loader/Loader";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
 import MovieModal from "../MovieModal/MovieModal";
 import ReactPaginate from "react-paginate";
-import { useQuery, type UseQueryResult } from "@tanstack/react-query";
+import {
+  useQuery,
+  keepPreviousData,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 import { type Movie } from "../../types/movie";
 import { fetchMovies, type TMDBResponse } from "../../services/movieService";
 import css from "./App.module.css";
@@ -22,15 +26,17 @@ const App: React.FC = () => {
     queryKey: ["movies", query, page],
     queryFn: () => fetchMovies(query, TMDB_TOKEN, page),
     enabled: !!query,
-    placeholderData: (previousData) => previousData,
+    placeholderData: keepPreviousData,
   }) as UseQueryResult<TMDBResponse, Error>;
 
+  // 🔥 Обробка успішного запиту (onSuccess через useEffect)
   useEffect(() => {
     if (isSuccess && data && data.results.length === 0) {
       toast("No movies found for your request.");
     }
   }, [isSuccess, data]);
 
+  // 🔥 Обробка помилок
   useEffect(() => {
     if (isError && error) {
       console.error(error);
