@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import SearchBar from "../SearchBar/SearchBar";
 import MovieGrid from "../MovieGrid/MovieGrid";
@@ -18,21 +18,25 @@ const App: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error, isSuccess } = useQuery({
     queryKey: ["movies", query, page],
     queryFn: () => fetchMovies(query, TMDB_TOKEN, page),
     enabled: !!query,
     placeholderData: (previousData) => previousData,
-    onSuccess: (data: TMDBResponse) => {
-      if (data.results.length === 0) {
-        toast("No movies found for your request.");
-      }
-    },
-    onError: (error: unknown) => {
+  }) as UseQueryResult<TMDBResponse, Error>;
+
+  useEffect(() => {
+    if (isSuccess && data && data.results.length === 0) {
+      toast("No movies found for your request.");
+    }
+  }, [isSuccess, data]);
+
+  useEffect(() => {
+    if (isError && error) {
       console.error(error);
       toast.error("An error occurred while fetching movies.");
-    },
-  }) as UseQueryResult<TMDBResponse, Error>;
+    }
+  }, [isError, error]);
 
   const handleSearch = (newQuery: string) => {
     setQuery(newQuery);
